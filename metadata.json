@@ -1,0 +1,6 @@
+{
+  "name": "Football Game",
+  "description": "Dynamic 2D arcade football match game where you play against a smart computer AI with intuitive joystick and kick controls, tournament mode, customizable matches, physics, and celebrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
