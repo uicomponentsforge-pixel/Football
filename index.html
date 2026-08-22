@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Football Game 2D - Arcade Match</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Main Game Canvas -->
+        <canvas id="gameCanvas" width="960" height="600"></canvas>
+
+        <!-- Top Scoreboard HUD (In-Game) -->
+        <div id="hud-scoreboard" class="hud-layer hidden">
+            <div class="team-badge user-team-hud">
+                <span id="hud-user-flag" class="flag-icon">🔴</span>
+                <span id="hud-user-name" class="team-name">RED</span>
+            </div>
+
+            <div class="score-pill">
+                <span id="hud-user-score">0</span>
+                <span class="score-divider">-</span>
+                <span id="hud-comp-score">0</span>
+            </div>
+
+            <div class="team-badge comp-team-hud">
+                <span id="hud-comp-name" class="team-name">BLU</span>
+                <span id="hud-comp-flag" class="flag-icon">🔵</span>
+            </div>
+
+            <div id="hud-clock" class="clock-pill">01:30</div>
+
+            <button id="btn-pause-game" class="icon-btn" title="Pause Game">
+                <span>⏸</span>
+            </button>
+        </div>
+
+        <!-- Radar Mini Map -->
+        <div id="hud-radar" class="hud-layer hidden">
+            <canvas id="radarCanvas" width="120" height="75"></canvas>
+        </div>
+
+        <!-- Goal Celebration Banner Overlay -->
+        <div id="goal-banner" class="banner-overlay hidden">
+            <div class="banner-content">
+                <h1 id="banner-title">🎉 GOOOAL!! 🎉</h1>
+                <p id="banner-subtitle">Scored by FW Leo</p>
+            </div>
+        </div>
+
+        <!-- On-Screen Controls (Touch/Mobile & On-Screen Overlay) -->
+        <div id="hud-controls" class="hud-layer hidden">
+            <div id="virtual-joystick" class="joystick-container">
+                <div id="joystick-base">
+                    <div id="joystick-thumb"></div>
+                </div>
+            </div>
+
+            <div id="action-buttons" class="action-buttons-container">
+                <div class="btn-row-top">
+                    <button id="btn-lob" class="action-btn btn-lob">LOB</button>
+                    <button id="btn-slide" class="action-btn btn-slide">SLIDE</button>
+                </div>
+                <div class="btn-row-bottom">
+                    <button id="btn-pass" class="action-btn btn-pass">PASS</button>
+                    <button id="btn-shoot" class="action-btn btn-shoot">
+                        <span>SHOOT</span>
+                        <div id="shoot-charge-bar" class="charge-bar">
+                            <div id="shoot-charge-fill" class="charge-fill"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Menu Screen -->
+        <div id="screen-main-menu" class="screen-layer">
+            <div class="menu-container">
+                <header class="menu-header">
+                    <div class="logo-group">
+                        <div class="logo-icon">⚽</div>
+                        <div>
+                            <h1>FOOTBALL 2D</h1>
+                            <p class="subtitle">Player vs Computer Arcade Match</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button id="btn-toggle-sound" class="icon-btn-text" title="Sound Toggle">
+                            <span id="sound-icon">🔊</span>
+                        </button>
+                        <button id="btn-open-help" class="icon-btn-text" title="How to Play">
+                            <span>❓</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Career Stats Bar -->
+                <div class="stats-card">
+                    <div class="stat-item">
+                        <span id="stat-matches" class="stat-val">0</span>
+                        <span class="stat-label">Matches</span>
+                    </div>
+                    <div class="stat-item highlight">
+                        <span id="stat-wins" class="stat-val">0</span>
+                        <span class="stat-label">Wins</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="stat-winrate" class="stat-val">0%</span>
+                        <span class="stat-label">Win Rate</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="stat-goals" class="stat-val">0</span>
+                        <span class="stat-label">Goals</span>
+                    </div>
+                    <div class="stat-item highlight">
+                        <span id="stat-cups" class="stat-val">0 🏆</span>
+                        <span class="stat-label">Cups</span>
+                    </div>
+                </div>
+
+                <!-- Game Mode Selector -->
+                <section class="menu-section">
+                    <h3>SELECT GAME MODE</h3>
+                    <div class="grid-4" id="mode-selector">
+                        <button class="mode-card active" data-mode="QUICK_MATCH">
+                            <span class="mode-icon">⚡</span>
+                            <span class="mode-title">Quick Match</span>
+                        </button>
+                        <button class="mode-card" data-mode="TOURNAMENT">
+                            <span class="mode-icon">🏆</span>
+                            <span class="mode-title">Championship Cup</span>
+                        </button>
+                        <button class="mode-card" data-mode="PENALTY_SHOOTOUT">
+                            <span class="mode-icon">🎯</span>
+                            <span class="mode-title">Penalty Shootout</span>
+                        </button>
+                        <button class="mode-card" data-mode="FREE_KICK">
+                            <span class="mode-icon">🚀</span>
+                            <span class="mode-title">Free Kick Drill</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- User Team Selector -->
+                <section class="menu-section">
+                    <h3>CHOOSE YOUR TEAM</h3>
+                    <div class="horizontal-scroll" id="user-team-selector">
+                        <!-- Dynamic team cards added via JS -->
+                    </div>
+                </section>
+
+                <!-- Opponent Team Selector -->
+                <section class="menu-section" id="comp-team-section">
+                    <h3>COMPUTER OPPONENT TEAM</h3>
+                    <div class="horizontal-scroll" id="comp-team-selector">
+                        <!-- Dynamic team cards added via JS -->
+                    </div>
+                </section>
+
+                <!-- AI Difficulty Selector -->
+                <section class="menu-section">
+                    <h3>AI DIFFICULTY</h3>
+                    <div class="grid-4" id="difficulty-selector">
+                        <button class="chip-btn" data-diff="EASY">Rookie</button>
+                        <button class="chip-btn active" data-diff="MEDIUM">Pro</button>
+                        <button class="chip-btn" data-diff="HARD">Legend</button>
+                        <button class="chip-btn" data-diff="MASTER">World Class</button>
+                    </div>
+                </section>
+
+                <!-- Match Settings (Duration & Stadium) -->
+                <div class="row-2" id="match-settings-row">
+                    <section class="menu-section">
+                        <h3>DURATION</h3>
+                        <div class="chip-group" id="duration-selector">
+                            <button class="chip-btn" data-sec="60">60s</button>
+                            <button class="chip-btn active" data-sec="90">90s</button>
+                            <button class="chip-btn" data-sec="120">120s</button>
+                        </div>
+                    </section>
+                    <section class="menu-section">
+                        <h3>STADIUM</h3>
+                        <div class="chip-group" id="stadium-selector">
+                            <button class="chip-btn active" data-stadium="EMERALD_ARENA">Emerald</button>
+                            <button class="chip-btn" data-stadium="SUNSET_STADIUM">Sunset</button>
+                            <button class="chip-btn" data-stadium="CYBER_DOME">Cyber</button>
+                            <button class="chip-btn" data-stadium="WINTER_PITCH">Winter</button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Big Action Launch Button -->
+                <button id="btn-start-game" class="btn-primary-large">
+                    <span>▶ KICK OFF MATCH!</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tournament Bracket Screen -->
+        <div id="screen-tournament" class="screen-layer hidden">
+            <div class="menu-container">
+                <header class="menu-header">
+                    <div class="logo-group">
+                        <button id="btn-tournament-back" class="icon-btn-text">←</button>
+                        <div>
+                            <h1>CHAMPIONSHIP CUP</h1>
+                            <p id="tournament-stage-title" class="subtitle">Quarter-Finals (8 Teams)</p>
+                        </div>
+                    </div>
+                    <span class="trophy-icon">🏆</span>
+                </header>
+
+                <div class="tournament-bracket">
+                    <div class="round-box" id="round-qf">
+                        <h4>QUARTER-FINALS</h4>
+                        <div class="fixtures-list" id="qf-fixtures"></div>
+                    </div>
+                    <div class="round-box" id="round-sf">
+                        <h4>SEMI-FINALS</h4>
+                        <div class="fixtures-list" id="sf-fixtures"></div>
+                    </div>
+                    <div class="round-box" id="round-final">
+                        <h4>CUP FINAL</h4>
+                        <div class="fixtures-list" id="final-fixtures"></div>
+                    </div>
+                </div>
+
+                <div id="tournament-action-area">
+                    <button id="btn-play-tournament-match" class="btn-primary-large">
+                        <span>▶ PLAY NEXT FIXTURE</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Dialog Modal -->
+        <div id="dialog-pause" class="modal-overlay hidden">
+            <div class="modal-card">
+                <h2>MATCH PAUSED</h2>
+                <div class="stats-table" id="pause-stats-table">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-resume-match" class="btn-primary">▶ RESUME MATCH</button>
+                    <button id="btn-restart-match" class="btn-secondary">🔄 RESTART</button>
+                    <button id="btn-exit-to-menu" class="btn-danger">🏠 MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Summary Modal -->
+        <div id="dialog-summary" class="modal-overlay hidden">
+            <div class="modal-card">
+                <h2 id="summary-title">🏆 VICTORY!</h2>
+                <div class="summary-score-pill">
+                    <span id="summary-user-team">RED</span>
+                    <span id="summary-score" class="score-text">3 - 1</span>
+                    <span id="summary-comp-team">BLU</span>
+                </div>
+                <div class="stats-table" id="summary-stats-table">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-summary-rematch" class="btn-primary">⚽ PLAY AGAIN</button>
+                    <button id="btn-summary-main-menu" class="btn-secondary">🏠 MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- How To Play Modal -->
+        <div id="dialog-help" class="modal-overlay hidden">
+            <div class="modal-card">
+                <h2>📖 HOW TO PLAY</h2>
+                <div class="controls-guide">
+                    <div class="guide-row">
+                        <span class="guide-key">🕹️ Movement</span>
+                        <span class="guide-desc">Arrow Keys / WASD or On-Screen Virtual Joystick</span>
+                    </div>
+                    <div class="guide-row">
+                        <span class="guide-key">⚡ Shoot / Super</span>
+                        <span class="guide-desc">Space / J Key or SHOOT Button (Hold to charge Super Shot!)</span>
+                    </div>
+                    <div class="guide-row">
+                        <span class="guide-key">⚽ Pass</span>
+                        <span class="guide-desc">K Key or PASS Button (Passes to nearest open teammate)</span>
+                    </div>
+                    <div class="guide-row">
+                        <span class="guide-key">🚀 Chip / Lob</span>
+                        <span class="guide-desc">L Key or LOB Button (Lofts ball high in the air)</span>
+                    </div>
+                    <div class="guide-row">
+                        <span class="guide-key">🛑 Slide Tackle</span>
+                        <span class="guide-desc">Shift / I Key or SLIDE Button (Slide tackle burst)</span>
+                    </div>
+                    <div class="guide-row">
+                        <span class="guide-key">💨 Sprint</span>
+                        <span class="guide-desc">Hold E or Sprint key (Uses stamina bar)</span>
+                    </div>
+                </div>
+                <button id="btn-close-help" class="btn-primary">GOT IT!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script src="js/Vec2.js"></script>
+    <script src="js/SoundSynthesizer.js"></script>
+    <script src="js/FootballGameEngine.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

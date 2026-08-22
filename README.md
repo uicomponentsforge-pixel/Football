@@ -1,22 +1,27 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Football Game 2D - HTML, CSS & JavaScript
 
-# Run and deploy your AI Studio app
+Dynamic 2D arcade football match game played right in your browser against a smart computer AI with intuitive virtual joystick/keyboard controls, tournament mode, customizable matches, physics, and celebrations!
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/31960475-470e-47ff-a6ed-f855e8f4f777
+- **HTML5 Canvas 2D Physics & Graphics**: Realistic ball dynamics (bounce, spin, height lofting, grass friction, and post collision physics).
+- **Computer AI Intelligence**: Smart computer bots with 4 difficulty settings (Rookie, Pro, Legend, World Class) capable of passing, shooting, pressing, and sliding.
+- **Multiple Game Modes**:
+  - **Quick Match**: Single match against AI with customizable durations and stadiums.
+  - **Championship Cup**: 8-Team knockout tournament bracket.
+  - **Penalty Shootout & Free Kick Challenges**.
+- **Arcade Controls**: Keyboard support (Arrow keys/WASD, Space/J for Shoot, K for Pass, L for Lob, Shift/I for Slide) and touch/mouse Virtual Joystick on mobile & web.
+- **Web Audio Sound Synthesizer**: Synthesized retro arcade audio feedback for kicks, whistles, tackles, post hits, and crowd celebrations without external media files.
+- **Career Persistence**: Statistics tracking (wins, goals, win rate, cup trophies) stored locally in `localStorage`.
 
 ## Run Locally
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+Simply open `index.html` in any modern web browser!
 
+Or serve locally with Python:
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
-7. If you have already published your app in AI Studio, please [request upload key reset](https://support.google.com/googleplay/android-developer/answer/9842756#zippy=%2Crequest-an-upload-key-reset) in Google Play Console.
+```bash
+python3 -m http.server 8000
+```
+
+Then navigate to `http://localhost:8000`.
