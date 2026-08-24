@@ -62,6 +62,14 @@ let selectedDifficulty = AiDifficulty.MEDIUM;
 let selectedDuration = 90;
 let selectedStadium = StadiumTypes.EMERALD_ARENA;
 
+// Mouse / Cursor Controls State
+const mouseState = {
+    isDown: false,
+    x: 0,
+    y: 0,
+    active: false
+};
+
 // Tournament state
 let tournamentRound = 1; // 1: QF, 2: SF, 3: Final, 4: Champion
 let qfMatches = [];
@@ -84,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initUI();
     initKeyboardControls();
     initJoystickControls();
+    initMouseControls();
     updateCareerStatsUI();
 });
 
@@ -327,6 +336,7 @@ function launchMatch(config) {
 
         if (!isPaused && activeEngine) {
             updateKeyboardControls();
+            updateMouseControls();
             activeEngine.update(dt);
             renderGame(activeEngine);
             renderRadar(activeEngine);
@@ -499,6 +509,20 @@ function renderGame(engine) {
     ctx.fillRect(0, gTop, gD, gH);
     ctx.fillRect(pW - gD, gTop, gD, gH);
 
+    // Render Mouse Target Cursor Ring on Canvas
+    if (mouseState.active && activeEngine) {
+        ctx.strokeStyle = "rgba(255, 213, 79, 0.8)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(mouseState.x, mouseState.y, 12, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255, 213, 79, 0.6)";
+        ctx.beginPath();
+        ctx.arc(mouseState.x, mouseState.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
     // Render Particles
     engine.particles.forEach(p => {
         ctx.fillStyle = p.color;
@@ -657,16 +681,16 @@ function launchCurrentTournamentMatch() {
 }
 
 // -------------------------------------------------------------
-// Keyboard & Joystick Controls
+// Keyboard, Joystick & Mouse Controls
 // -------------------------------------------------------------
 
 function initKeyboardControls() {
     window.addEventListener('keydown', (e) => {
         switch (e.code) {
-            case 'ArrowUp': case 'KeyW': keyState.up = true; break;
-            case 'ArrowDown': case 'KeyS': keyState.down = true; break;
-            case 'ArrowLeft': case 'KeyA': keyState.left = true; break;
-            case 'ArrowRight': case 'KeyD': keyState.right = true; break;
+            case 'ArrowUp': case 'KeyW': keyState.up = true; mouseState.active = false; break;
+            case 'ArrowDown': case 'KeyS': keyState.down = true; mouseState.active = false; break;
+            case 'ArrowLeft': case 'KeyA': keyState.left = true; mouseState.active = false; break;
+            case 'ArrowRight': case 'KeyD': keyState.right = true; mouseState.active = false; break;
             case 'KeyE': case 'ShiftLeft': keyState.sprint = true; break;
             case 'Space': case 'KeyJ':
                 if (!keyState.shoot && activeEngine) activeEngine.onShootPressed();
@@ -706,7 +730,7 @@ function initKeyboardControls() {
 }
 
 function updateKeyboardControls() {
-    if (!activeEngine) return;
+    if (!activeEngine || mouseState.active) return;
     let dx = 0;
     let dy = 0;
     if (keyState.up) dy -= 1;
@@ -714,7 +738,9 @@ function updateKeyboardControls() {
     if (keyState.left) dx -= 1;
     if (keyState.right) dx += 1;
 
-    activeEngine.joystickDirection = new Vec2(dx, dy);
+    if (dx !== 0 || dy !== 0) {
+        activeEngine.joystickDirection = new Vec2(dx, dy);
+    }
     activeEngine.sprintHeld = keyState.sprint;
 }
 
@@ -726,6 +752,7 @@ function initJoystickControls() {
 
     base.addEventListener('pointerdown', (e) => {
         isDragging = true;
+        mouseState.active = false;
         baseRect = base.getBoundingClientRect();
         updateJoystickPosition(e);
     });
@@ -738,7 +765,7 @@ function initJoystickControls() {
         if (isDragging) {
             isDragging = false;
             thumb.style.transform = `translate(-50%, -50%)`;
-            if (activeEngine) activeEngine.joystickDirection = Vec2.zero();
+            if (activeEngine && !mouseState.active) activeEngine.joystickDirection = Vec2.zero();
         }
     });
 
@@ -758,5 +785,56 @@ function initJoystickControls() {
 
         thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
         activeEngine.joystickDirection = new Vec2(dx / maxDist, dy / maxDist);
+    }
+}
+
+function initMouseControls() {
+    canvas.addEventListener('pointermove', (e) => {
+        if (!activeEngine) return;
+        const rect = canvas.getBoundingClientRect();
+        mouseState.x = e.clientX - rect.left;
+        mouseState.y = e.clientY - rect.top;
+        if (mouseState.isDown) mouseState.active = true;
+    });
+
+    canvas.addEventListener('pointerdown', (e) => {
+        if (!activeEngine) return;
+        mouseState.isDown = true;
+        mouseState.active = true;
+        const rect = canvas.getBoundingClientRect();
+        mouseState.x = e.clientX - rect.left;
+        mouseState.y = e.clientY - rect.top;
+
+        // Start shoot charge or pass on click
+        activeEngine.onShootPressed();
+    });
+
+    window.addEventListener('pointerup', () => {
+        if (mouseState.isDown) {
+            mouseState.isDown = false;
+            if (activeEngine) activeEngine.onShootReleased();
+        }
+    });
+}
+
+function updateMouseControls() {
+    if (!activeEngine || !mouseState.active) return;
+    const controlled = activeEngine.getControlledPlayer();
+    if (!controlled) return;
+
+    const scaleX = canvas.width / activeEngine.pitchWidth;
+    const scaleY = canvas.height / activeEngine.pitchHeight;
+
+    const playerCanvasX = controlled.pos.x * scaleX;
+    const playerCanvasY = controlled.pos.y * scaleY;
+
+    const dx = mouseState.x - playerCanvasX;
+    const dy = mouseState.y - playerCanvasY;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 10) {
+        activeEngine.joystickDirection = new Vec2(dx / dist, dy / dist);
+    } else {
+        activeEngine.joystickDirection = Vec2.zero();
     }
 }
